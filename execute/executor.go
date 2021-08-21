@@ -11,6 +11,7 @@ import (
 
 	"github.com/influxdata/flux"
 	"github.com/influxdata/flux/codes"
+	"github.com/influxdata/flux/dependencies/rand"
 	"github.com/influxdata/flux/internal/errors"
 	"github.com/influxdata/flux/memory"
 	"github.com/influxdata/flux/metadata"
@@ -92,6 +93,7 @@ func (e *executor) createExecutionState(ctx context.Context, p *plan.Spec, a *me
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
+	ctx = rand.Seed(ctx, p.Now.UnixNano())
 	es := &executionState{
 		p:         p,
 		ctx:       ctx,
