@@ -488,6 +488,30 @@ builtin nanosecond : (t: T) => int where T: Timeable
 // ```
 builtin truncate : (t: T, unit: duration) => time where T: Timeable
 
+// Add will add the given duration to the time to produce a new time.
+// The addition will take into account various adjustments, such as
+// months, automatically.
+//
+// The scale parameter will scale the duration by multiplying it.
+// It is the equivalent of if the following operations were implemented
+// natively: `t + (d * scale)`. This is the same operation that windowing
+// uses. The default value for this is one.
+//
+// ## Parameters
+// - `t` is the time that will be operated on.
+//
+// - `d` is the duration that will be added to the time.
+//
+// - `scale` will scale the duration by multiplying it before
+//   operating on the time. This is the equivalent of the following operations
+//   if they were implemented in flux natively: `t + (d * scale)`. This is
+//   also the same operation that windowing uses.
+//
+//   The default for this value is one. If you want to use this function
+//   to subtract a duration, you can either set this value to `-1` or use
+//   a negative duration.
+builtin add : (t: time, d: duration, ?scale: int) => time
+
 // Sunday is a constant that represents Sunday as a day of the week
 Sunday = 0
 

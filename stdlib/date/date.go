@@ -6,9 +6,11 @@ import (
 	"math"
 	"time"
 
+	"github.com/influxdata/flux"
 	"github.com/influxdata/flux/codes"
 	"github.com/influxdata/flux/execute"
 	"github.com/influxdata/flux/internal/errors"
+	"github.com/influxdata/flux/interpreter"
 	"github.com/influxdata/flux/runtime"
 	"github.com/influxdata/flux/semantic"
 	"github.com/influxdata/flux/values"
@@ -433,4 +435,38 @@ func init() {
 	runtime.RegisterPackageValue("date", "microsecond", SpecialFns["microsecond"])
 	runtime.RegisterPackageValue("date", "nanosecond", SpecialFns["nanosecond"])
 	runtime.RegisterPackageValue("date", "truncate", SpecialFns["truncate"])
+	runtime.RegisterPackageValue("date", "add", values.NewFunction(
+		"add",
+		runtime.MustLookupBuiltinType("date", "add"),
+		func(ctx context.Context, args values.Object) (values.Value, error) {
+			return interpreter.DoFunctionCall(Add, args)
+		},
+		false,
+	))
+}
+
+func Add(iargs interpreter.Arguments) (values.Value, error) {
+	args := flux.Arguments{Arguments: iargs}
+	t, err := args.GetRequiredTime("t")
+	if err != nil {
+		return nil, err
+	}
+
+	d, err := args.GetRequiredDuration("d")
+	if err != nil {
+		return nil, err
+	}
+
+	scale, ok, err := args.GetInt("scale")
+	if err != nil {
+		return nil, err
+	} else if ok {
+		d = d.Mul(int(scale))
+	}
+
+	// This operation is ok because we only allow time values
+	// to be passed to this function. Time values get evaluated
+	// in the absolute parameter.
+	ts := values.Time(t.Absolute.UnixNano()).Add(d)
+	return values.NewTime(ts), nil
 }
