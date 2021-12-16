@@ -926,6 +926,13 @@ impl MonoType {
             (MonoType::Record(t), MonoType::Record(s)) => t.unify(s, unifier),
             (MonoType::Fun(t), MonoType::Fun(s)) => t.unify(s, unifier),
             (MonoType::Optional(t), MonoType::Optional(s)) => t.unify(s, sub),
+            (MonoType::Optional(t), s) => t.0.unify(s, sub).map_err(|err| match err {
+                Error::CannotUnify { exp, act } => Error::CannotUnify {
+                    exp: MonoType::from(Optional(exp)),
+                    act,
+                },
+                _ => err,
+            }),
             (exp, act) => {
                 unifier.errors.push(Error::CannotUnify {
                     exp: exp.clone(),
@@ -1471,12 +1478,16 @@ impl Record {
             // If we are expecting {a: u | r} but find {}, label `a` is missing.
             (
                 Record::Extension {
-                    head: Property { k: a, .. },
-                    ..
+                    head: Property { k: a, v: t },
+                    tail,
                 },
                 Record::Empty,
             ) => {
-                unifier.errors.push(Error::MissingLabel(a.to_string()));
+                if let MonoType::Optional(_) = &*t.apply_cow(sub) {
+                    tail.unify(&MonoType::from(Record::Empty), sub)
+                } else {
+                    unifier.errors.push(Error::MissingLabel(a.to_string()));
+                }
             }
             // If we are expecting {} but find {a: u | r}, label `a` is extra.
             (
