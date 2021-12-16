@@ -485,6 +485,7 @@ impl<'doc> Formatter<'doc> {
                     self.format_monotype(&n.monotype),
                 ]
             }
+            ast::MonoType::Optional(opt) => docs![arena, self.format_monotype(&opt.monotype), "?"],
         }
         .group()
     }

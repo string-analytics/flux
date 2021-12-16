@@ -164,6 +164,9 @@ fn build_monotype<'a>(
             let offset = build_function_type(builder, *t);
             (offset.as_union_value(), fb::MonoType::FunctionType)
         }
+        MonoType::Optional(_) => {
+            todo!()
+        }
     }
 }
 
