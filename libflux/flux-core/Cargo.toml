@@ -34,7 +34,8 @@ codespan-reporting = "0.11"
 comrak = "0.10.1"
 fnv = "1.0.7"
 derive_more = { version = "0.99.11", default-features = false, features = [
-    "display"
+    "display",
+    "from",
 ] }
 pretty = "0.11.2"
 rayon = { version = "1", optional = true }

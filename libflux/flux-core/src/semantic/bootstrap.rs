@@ -20,7 +20,9 @@ use crate::{
         import::{Importer, Packages},
         nodes::{self, Package, Symbol},
         sub::{Substitutable, Substituter},
-        types::{MonoType, PolyType, PolyTypeHashMap, Record, SemanticMap, Tvar, TvarKinds},
+        types::{
+            MonoType, PolyType, PolyTypeHashMap, Record, RecordLabel, SemanticMap, Tvar, TvarKinds,
+        },
         Analyzer, PackageExports,
     },
 };
@@ -313,7 +315,10 @@ fn add_record_to_map(
                 }
             }
             env.insert(
-                head.k.clone().into(),
+                match &head.k {
+                    RecordLabel::Concrete(s) => s.clone().into(),
+                    RecordLabel::Variable(_) => bail!("Record contains variable labels"),
+                },
                 PolyType {
                     vars: new_vars,
                     cons: new_cons,
