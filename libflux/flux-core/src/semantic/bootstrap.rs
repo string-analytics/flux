@@ -299,7 +299,7 @@ fn add_record_to_map(
         Record::Extension { head, tail } => {
             let new_vars = {
                 let new_vars = CollectBoundVars(RefCell::new(Vec::new()));
-                head.v.apply_ref(&new_vars);
+                head.v.visit(&new_vars);
                 new_vars.0.into_inner()
             };
 
