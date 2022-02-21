@@ -574,7 +574,7 @@ impl<'a> Converter<'a> {
                                 .entry(prop.name.name.clone())
                                 .or_insert_with(|| self.sub.fresh())
                                 .clone();
-                            tvar.into()
+                            types::RecordLabel::BoundVariable(tvar)
                         } else {
                             types::Label::from(self.symbols.lookup(&prop.name.name)).into()
                         },
