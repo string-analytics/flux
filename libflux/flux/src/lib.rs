@@ -749,9 +749,7 @@ vstr = v.str + "hello"
         v.normalize(&mut t);
         assert_eq!(format!("{}", t), "{B with int:int, sweet:A, str:string}");
 
-        assert_eq!(
-            serde_json::to_string_pretty(&t).unwrap(),
-            r#"{
+        expect_test::expect![[r#"{
   "Record": {
     "type": "Extension",
     "head": {
@@ -782,8 +780,8 @@ vstr = v.str + "hello"
       }
     }
   }
-}"#
-        );
+}"#]]
+        .assert_eq(&serde_json::to_string_pretty(&t).unwrap());
     }
 
     #[test]
@@ -813,9 +811,7 @@ p = o.ethan
         v.normalize(&mut t);
         assert_eq!(format!("{}", t), "{B with int:int, ethan:A}");
 
-        assert_eq!(
-            serde_json::to_string_pretty(&t).unwrap(),
-            r#"{
+        expect_test::expect![[r#"{
   "Record": {
     "type": "Extension",
     "head": {
@@ -837,8 +833,8 @@ p = o.ethan
       }
     }
   }
-}"#
-        );
+}"#]]
+        .assert_eq(&serde_json::to_string_pretty(&t).unwrap());
     }
 
     #[test]
