@@ -49,8 +49,8 @@ fn labels_dynamic_string() {
             x = [{ a: 1 }] |> fill(column: column, value: "x")
         "#,
         exp: map![
-            "x" => "string",
-            "x" => "[{ a: string }]",
+            "column" => "string",
+            "x" => "[{ *: string }]",
         ],
     }
 }

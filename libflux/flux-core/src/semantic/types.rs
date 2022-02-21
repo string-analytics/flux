@@ -1245,7 +1245,9 @@ impl Record {
         let has_variable_label = |r: &Record| {
             r.fields().any(|prop| match prop.k {
                 RecordLabel::Variable(v) => unifier.sub.try_apply(v).is_none(),
-                RecordLabel::BoundVariable(_) | RecordLabel::Concrete(_) => false,
+                RecordLabel::BoundVariable(_) | RecordLabel::Concrete(_) | RecordLabel::Dynamic => {
+                    false
+                }
             })
         };
         if has_variable_label(self) || has_variable_label(actual) {
@@ -1321,6 +1323,11 @@ impl Record {
                         if unifier.sub.try_apply(*b).is_none() {
                             b.unify(&MonoType::Label(a.clone()), unifier)
                         }
+                    }
+                    (RecordLabel::Dynamic, _) | (_, RecordLabel::Dynamic) => {
+                        t.unify(u, unifier);
+                        l.unify(r, unifier);
+                        return;
                     }
                     _ => (),
                 }
@@ -1458,6 +1465,8 @@ pub enum RecordLabel {
     BoundVariable(Tvar),
     /// A concrete label
     Concrete(Label),
+    /// A dynamic label, will match against any field
+    Dynamic,
 }
 
 impl From<Label> for RecordLabel {
@@ -1473,6 +1482,7 @@ impl Substitutable for RecordLabel {
                 MonoType::Label(l) => Some(Self::Concrete(l)),
                 MonoType::BoundVar(l) => Some(Self::BoundVariable(l)),
                 MonoType::Var(l) => Some(Self::Variable(l)),
+                MonoType::Builtin(BuiltinType::String) => Some(Self::Dynamic),
                 _ => None,
             }),
 
@@ -1480,10 +1490,11 @@ impl Substitutable for RecordLabel {
                 MonoType::Label(l) => Some(Self::Concrete(l)),
                 MonoType::BoundVar(l) => Some(Self::BoundVariable(l)),
                 MonoType::Var(l) => Some(Self::Variable(l)),
+                MonoType::Builtin(BuiltinType::String) => Some(Self::Dynamic),
                 _ => None,
             }),
 
-            Self::Concrete(_) => None,
+            Self::Concrete(_) | Self::Dynamic => None,
         }
     }
 }
@@ -1494,6 +1505,7 @@ impl fmt::Display for RecordLabel {
             Self::BoundVariable(v) => v.fmt(f),
             Self::Variable(v) => write!(f, "#{}", v),
             Self::Concrete(v) => v.fmt(f),
+            Self::Dynamic => f.write_str("*"),
         }
     }
 }
@@ -1501,7 +1513,7 @@ impl fmt::Display for RecordLabel {
 impl PartialEq<str> for RecordLabel {
     fn eq(&self, other: &str) -> bool {
         match self {
-            Self::BoundVariable(_) | Self::Variable(_) => false,
+            Self::BoundVariable(_) | Self::Variable(_) | Self::Dynamic => false,
             Self::Concrete(l) => l == other,
         }
     }
