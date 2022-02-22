@@ -575,6 +575,8 @@ impl<'a> Converter<'a> {
                                 .or_insert_with(|| self.sub.fresh())
                                 .clone();
                             types::RecordLabel::BoundVariable(tvar)
+                        } else if prop.name.name == "*" {
+                            types::RecordLabel::Dynamic
                         } else {
                             types::Label::from(self.symbols.lookup(&prop.name.name)).into()
                         },
