@@ -1316,12 +1316,18 @@ impl Record {
                 match (a, b) {
                     (RecordLabel::Variable(a), RecordLabel::Concrete(b)) => {
                         if unifier.sub.try_apply(*a).is_none() {
-                            a.unify(&MonoType::Label(b.clone()), unifier)
+                            a.unify(&MonoType::Label(b.clone()), unifier);
+                            t.unify(u, unifier);
+                            l.unify(r, unifier);
+                            return;
                         }
                     }
                     (RecordLabel::Concrete(a), RecordLabel::Variable(b)) => {
                         if unifier.sub.try_apply(*b).is_none() {
-                            b.unify(&MonoType::Label(a.clone()), unifier)
+                            b.unify(&MonoType::Label(a.clone()), unifier);
+                            t.unify(u, unifier);
+                            l.unify(r, unifier);
+                            return;
                         }
                     }
                     (RecordLabel::Dynamic, _) | (_, RecordLabel::Dynamic) => {
