@@ -183,8 +183,10 @@ impl Environment<'_> {
             .find(|symbol| *symbol == v)
         {
             Some(t)
-        } else if let Some(env) = &self.parent {
-            env.lookup_symbol(v)
+        } else if let Some(t) = self.external.as_ref().and_then(|env| env.lookup_symbol(v)) {
+            Some(t)
+        } else if let Some(t) = self.parent.as_ref().and_then(|env| env.lookup_symbol(v)) {
+            Some(t)
         } else {
             None
         }
