@@ -192,7 +192,7 @@ func TestFluxCompiler(t *testing.T) {
 
 			// we need to start the program to get compile errors derived from AST evaluation
 			ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
-			if _, err = program.Start(ctx, &memory.Allocator{}); tc.startErr == "" && err != nil {
+			if _, err = program.Start(ctx, &memory.ResourceAllocator{}); tc.startErr == "" && err != nil {
 				t.Errorf("expected query %q to start successfully but got error %v", tc.q, err)
 			} else if tc.startErr != "" && err == nil {
 				t.Errorf("expected query %q to start with error but got no error", tc.q)
@@ -211,7 +211,7 @@ func TestCompilationError(t *testing.T) {
 	}
 
 	ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
-	_, err = program.Start(ctx, &memory.Allocator{})
+	_, err = program.Start(ctx, &memory.ResourceAllocator{})
 	if err == nil {
 		t.Fatal("compilation error expected, got none")
 	}
@@ -411,7 +411,7 @@ csv.from(csv: "foo,bar") |> range(start: 2017-10-10T00:00:00Z)
 			}
 			ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
 			// we need to start the program to get compile errors derived from AST evaluation
-			if _, err := program.Start(ctx, &memory.Allocator{}); err != nil {
+			if _, err := program.Start(ctx, &memory.ResourceAllocator{}); err != nil {
 				if tc.startErr == "" {
 					t.Fatalf("failed to start program: %v", err)
 				} else {
@@ -459,7 +459,7 @@ csv.from(csv: "
 		t.Fatalf("unexpected compile error: %s", err)
 	}
 
-	mem := &memory.Allocator{}
+	mem := &memory.ResourceAllocator{}
 	qry, err := program.Start(context.Background(), mem)
 	if err != nil {
 		t.Fatalf("unexpected program error: %s", err)
@@ -503,7 +503,7 @@ func TestCompileOptions(t *testing.T) {
 
 	// start program in order to evaluate planner options
 	ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
-	if _, err := program.Start(ctx, &memory.Allocator{}); err != nil {
+	if _, err := program.Start(ctx, &memory.ResourceAllocator{}); err != nil {
 		t.Fatalf("failed to start program: %v", err)
 	}
 
@@ -832,7 +832,7 @@ option planner.disableLogicalRules = ["removeCountRule"]`},
 
 			program := lang.CompileAST(astPkg, runtime.Default, nowFn())
 			ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
-			if _, err := program.Start(ctx, &memory.Allocator{}); err != nil {
+			if _, err := program.Start(ctx, &memory.ResourceAllocator{}); err != nil {
 				if tc.wantErr == "" {
 					t.Fatalf("failed to start program: %v", err)
 				} else if got := getRootErr(err); tc.wantErr != got.Error() {
@@ -994,7 +994,7 @@ func getTableObjectTablesOrFail(t *testing.T, to *flux.TableObject) []*executete
 	}
 
 	ctx := executetest.NewTestExecuteDependencies().Inject(context.Background())
-	q, err := program.Start(ctx, &memory.Allocator{})
+	q, err := program.Start(ctx, &memory.ResourceAllocator{})
 	if err != nil {
 		t.Fatal(err)
 	}
