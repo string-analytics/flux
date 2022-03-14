@@ -446,3 +446,11 @@ assertEqualValues = (got, want) => {
         diff(got: array.from(rows: [{v: got}]), want: array.from(rows: [{v: want}]))
             |> yield()
 }
+
+// do is a placeholder function that errors if called.
+// It is used to indicate where the parent test case should be applied.
+// The test harness replaces calls to testing.do as such it should never actually be called.
+//
+// ## Metadata
+// introduced: NEXT
+builtin do : () => bool
