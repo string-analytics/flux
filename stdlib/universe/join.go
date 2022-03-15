@@ -837,13 +837,17 @@ func (c *MergeJoinCache) buildPostJoinSchema() {
 	}
 }
 
-// Find indexes of column names missing between the two tables
-func (c *MergeJoinCache) missingColIdx(lCols, rCols []flux.ColMeta) []int {
+// Add the missing coloumn from the stream's tables to the resultant join schema
+// and
+// return the indexes of column names missing between the two tables (if any)
+func (c *MergeJoinCache) addMissingColToResultTable(lCols, rCols []flux.ColMeta, builder *execute.ColListTableBuilder) ([]int, error) {
 
+	var newColumnIdx int
 	var idxs []int
+	var err error
 
 	if len(lCols) == 0 || len(rCols) == 0 {
-		return idxs
+		return idxs, nil
 	}
 
 	trackIdx := make(map[int]struct{})
@@ -853,8 +857,19 @@ func (c *MergeJoinCache) missingColIdx(lCols, rCols []flux.ColMeta) []int {
 			table: c.names[c.leftID],
 			col:   lCol.Label,
 		}
-		newColumn := c.schemaMap[column]
-		newColumnIdx := c.colIndex[newColumn]
+		newColumn, ok := c.schemaMap[column]
+		if !ok {
+			newColumnIdx, err = c.addTableColumnsToSchema(lCol, column, builder)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			newColumnIdx, ok = c.colIndex[newColumn]
+			if !ok {
+				errors.Newf(codes.Internal, "could not find index for column '%s'", column.col)
+			}
+			trackIdx[newColumnIdx] = struct{}{}
+		}
 		trackIdx[newColumnIdx] = struct{}{}
 	}
 
@@ -863,8 +878,18 @@ func (c *MergeJoinCache) missingColIdx(lCols, rCols []flux.ColMeta) []int {
 			table: c.names[c.rightID],
 			col:   rCol.Label,
 		}
-		newColumn := c.schemaMap[column]
-		newColumnIdx := c.colIndex[newColumn]
+		newColumn, ok := c.schemaMap[column]
+		if !ok {
+			newColumnIdx, err = c.addTableColumnsToSchema(rCol, column, builder)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			newColumnIdx, ok = c.colIndex[newColumn]
+			if !ok {
+				errors.Newf(codes.Internal, "could not find index for column '%s'", column.col)
+			}
+		}
 		trackIdx[newColumnIdx] = struct{}{}
 	}
 
@@ -874,7 +899,31 @@ func (c *MergeJoinCache) missingColIdx(lCols, rCols []flux.ColMeta) []int {
 		}
 	}
 
-	return idxs
+	return idxs, nil
+}
+
+func (c *MergeJoinCache) addTableColumnsToSchema(mCol flux.ColMeta, column tableCol, builder *execute.ColListTableBuilder) (int, error) {
+	var idx int
+	var err error
+
+	if _, ok := c.schemaMap[column]; !ok {
+		newLabel := fmt.Sprintf("%s_%s", column.col, column.table)
+		missingCol := flux.ColMeta{
+			Label: newLabel,
+			Type:  mCol.Type,
+		}
+		c.schemaMap[column] = missingCol
+		c.schema.columns = append(c.schema.columns, missingCol)
+		c.colIndex[missingCol] = len(c.schema.columns) - 1
+
+		// add this column to result builder
+		idx, err = builder.AddCol(missingCol)
+		if err != nil {
+			return -1, err
+		}
+	}
+
+	return idx, nil
 }
 
 func (c *MergeJoinCache) join(left, right *execute.ColListTableBuilder) (flux.Table, error) {
@@ -904,8 +953,10 @@ func (c *MergeJoinCache) join(left, right *execute.ColListTableBuilder) (flux.Ta
 		}
 	}
 
-	// find missing coloumn indexes between two tables
-	missingIdxs := c.missingColIdx(left.Cols(), right.Cols())
+	missingIdxs, err := c.addMissingColToResultTable(left.Cols(), right.Cols(), builder)
+	if err != nil {
+		return nil, err
+	}
 
 	// Perform sort merge join
 	for !leftSet.Empty() && !rightSet.Empty() {
@@ -997,6 +1048,17 @@ func (c *MergeJoinCache) postJoinGroupKey(keys map[execute.DatasetID]flux.GroupK
 			tableAndColumn := tableCol{
 				table: c.names[id],
 				col:   column.Label,
+			}
+
+			if _, ok := c.schemaMap[tableAndColumn]; !ok {
+				newLabel := fmt.Sprintf("%s_%s", tableAndColumn.col, tableAndColumn.table)
+				missingCol := flux.ColMeta{
+					Label: newLabel,
+					Type:  column.Type,
+				}
+				c.schemaMap[tableAndColumn] = missingCol
+				c.schema.columns = append(c.schema.columns, missingCol)
+				c.colIndex[missingCol] = len(c.schema.columns) - 1
 			}
 
 			colMeta := c.schemaMap[tableAndColumn]

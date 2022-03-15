@@ -504,7 +504,7 @@ var sourceHashes = map[string]string{
 	"stdlib/universe/integral_test.flux":                                                          "a2b3d16ad20068af8ac7b960b152beb5d4a0319a2b07210467c8cfcdd55ed559",
 	"stdlib/universe/join_across_measurements_test.flux":                                          "61d69faa82616287ac875e8878e9c8095a46d638e0cecdc30f9db26763ca1eec",
 	"stdlib/universe/join_agg_test.flux":                                                          "34b8eb508967c31d52dbe4a225d9b48c5ec1177e8021dc98267c5956f285ffdf",
-	"stdlib/universe/join_mismatched_schema_test.flux":                                            "152ebc1fe1f3bf65ab84cf60582ac5b4618538a4c70eb729ab52a66183c58dbf",
+	"stdlib/universe/join_mismatched_schema_test.flux":                                            "9bf5e9f5d88dd89a5af23daf9cc456b4b7799c43beb2abb67c9ae3cb0fb3fcc9",
 	"stdlib/universe/join_missing_on_col_test.flux":                                               "3d15e1bb1186ffbf39d68fb2698eca0812608a77be3592d5559fc2a3f5c0ae4a",
 	"stdlib/universe/join_panic_test.flux":                                                        "d974919167b6bf8c0ce323f23f09aebccdad7ba4fbe1fd3cc1cd90402d9af28f",
 	"stdlib/universe/join_test.flux":                                                              "7265656eb22c659f97e4ae15a4b6538f9081c2aef344a0131bcee09bdc6a61f8",
