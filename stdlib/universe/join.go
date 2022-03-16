@@ -868,7 +868,6 @@ func (c *MergeJoinCache) addMissingColToResultTable(lCols, rCols []flux.ColMeta,
 			if !ok {
 				errors.Newf(codes.Internal, "could not find index for column '%s'", column.col)
 			}
-			trackIdx[newColumnIdx] = struct{}{}
 		}
 		trackIdx[newColumnIdx] = struct{}{}
 	}
